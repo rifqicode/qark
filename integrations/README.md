@@ -21,6 +21,22 @@ Relative skill paths can vary across hosts; point Node at the actual installed `
 - **Systematic Debugging:** installs only the `systematic-debugging` skill from `obra/superpowers` using `npx skills add obra/superpowers --skill systematic-debugging -g -y`. Orchestrator and Researcher load it when a bug, failure or unexpected behavior needs investigation, if the host exposes the installed skill. If unavailable, they use built-in research instead. Does not auto-install or bypass Impact Gate. Source: https://github.com/obra/superpowers/tree/main/skills/systematic-debugging
 - **RTK:** uses an already installed `rtk` if present. Otherwise installs via Homebrew (macOS or Linux with brew) or WinGet (Windows); on unsupported systems it prints the official manual instructions rather than running a remote shell script. Then `rtk init -g` (Claude), `rtk init -g --codex`, and/or `rtk init -g --agent antigravity`. Source: https://github.com/rtk-ai/rtk
 
+## QA video recording (Playwright)
+
+QA must record video for UI changes (before/after) and CLI test runs. Setup is the `qa-video` integration of the same `setup.mjs` as the others; the recording scripts live in `integrations/qa-video/`. Playwright is kept in an isolated runtime dir (`~/.cache/qark/qa-video`, override with `QARK_QA_HOME`); nothing is added to the target project.
+
+```bash
+node integrations/setup.mjs --only qa-video --check     # is recording ready? (changes nothing; exit 0 ready / 1 not)
+node integrations/setup.mjs --only qa-video --dry-run   # preview the install
+node integrations/setup.mjs --only qa-video --yes       # install Playwright + headless Chromium (explicit opt-in, no sudo)
+
+node integrations/qa-video/record-ui.mjs  --script scenario.mjs --base-url http://localhost:3000 --out .ai/runs/PLAN/qa/Q-01-after
+node integrations/qa-video/record-cli.mjs --out .ai/runs/PLAN/qa/Q-02-after -- npm test
+node integrations/qa-video/side-by-side.mjs --before Q-01-before.webm --after Q-01-after.webm --out Q-01-compare.webm   # optional, needs ffmpeg
+```
+
+`record-cli.mjs` records a live rendering of the real command's output (not a real TTY); the `.log` and exit code are the authoritative evidence. The installer is never run automatically: QA asks for approval first, and reports video as BLOCKED if declined. On Linux, missing Chromium system libraries need `sudo npx playwright install-deps chromium`, which the script prints but never runs.
+
 ## Guardrails
 
 - All integrations are optional, selected explicitly, and confirmed individually unless `--yes` is supplied. If `--only` is omitted, the installer offers all manifest integrations.
@@ -41,4 +57,6 @@ rtk gain
 
 This installer provides orchestration, not a vendor-specific uninstall/rollback manager. Confirm upstream versions and review third-party code before opting in.
 
-## Official Herdr skill (optional)\n\nQark does not install or implement Herdr. If its official `herdr` skill is already available and activated, Orchestrator reads and follows it for supported visible separate-CLI-agent execution. If absent, use native delegation/fallback. See [Herdr routing](herdr.md).\n
+## Herdr delegation driver
+
+Qark does not install Herdr or the Herdr skill. When Qark runs inside Herdr (`HERDR_ENV=1`) and the official `herdr` skill is readable, Orchestrator automatically spawns planned specialist work as visible separate CLI agents in new panes, following that skill for commands. Otherwise it falls back to native subagents or sequential execution. See [Herdr driver](herdr.md).

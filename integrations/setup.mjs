@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Optional installer: explicit opt-in only; never run downloaded shell scripts.
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, existsSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
+import { runtimeDir as qaRuntimeDir, probeQaVideo, hasFfmpeg } from './qa-video/lib.mjs';
 
 const manifest = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'manifest.json'), 'utf8'));
 const args = process.argv.slice(2);
@@ -17,7 +18,7 @@ const value = (name, fallback) => {
 };
 const help = args.includes('--help') || args.includes('-h');
 if (help) {
-  console.log('Usage: node integrations/setup.mjs [--only caveman,rtk,systematic-debugging] [--agent claude|codex|antigravity|all] [--dry-run] [--yes] [--skip caveman,rtk]');
+  console.log('Usage: node integrations/setup.mjs [--only caveman,rtk,systematic-debugging,qa-video] [--agent claude|codex|antigravity|all] [--dry-run] [--yes] [--skip caveman,rtk] [--check]\n  --check  report whether QA video recording (qa-video) is ready; changes nothing, exit 0 ready / 1 not ready');
   process.exit(0);
 }
 const choices = new Set(manifest.integrations.map(entry => entry.id));
@@ -26,9 +27,11 @@ const parseNames = (flag, fallback) => {
   for (const item of items) if (!choices.has(item)) throw new Error('Unknown integration: ' + item);
   return new Set(items);
 };
-const only = parseNames('--only', manifest.integrations.map(entry => entry.id).join(','));
+const check = args.includes('--check');
+const only = parseNames('--only', check ? 'qa-video' : manifest.integrations.map(entry => entry.id).join(','));
 const skip = parseNames('--skip', '');
 const selected = [...only].filter(x => !skip.has(x));
+if (check && (selected.length !== 1 || selected[0] !== 'qa-video')) throw new Error('--check only supports --only qa-video');
 const agent = value('--agent', 'all');
 if (!['claude', 'codex', 'antigravity', 'all'].includes(agent)) throw new Error('Invalid --agent');
 const dry = args.includes('--dry-run');
@@ -60,6 +63,12 @@ const confirm = async label => {
   try { return /^y(es)?$/i.test((await rl.question(label + ' [y/N] ')).trim()); }
   finally { rl.close(); }
 };
+if (check) {
+  const state = await probeQaVideo();
+  console.log(state.ok ? 'qa-video: READY (runtime ' + qaRuntimeDir + ')' : 'qa-video: NOT READY — ' + state.reason);
+  console.log('ffmpeg (optional, for side-by-side): ' + (hasFfmpeg() ? 'found' : 'not found'));
+  process.exit(state.ok ? 0 : 1);
+}
 console.log('qark optional integrations | platform=' + os + ' | agent=' + agent);
 console.log('Selected: ' + (selected.join(', ') || 'none') + ' | dry-run=' + dry);
 if (!selected.length) process.exit(0);
@@ -67,10 +76,45 @@ if (!dry && !yes && !stdin.isTTY) {
   console.error('Nothing changed: interactive confirmation unavailable. Use --yes to opt in.');
   process.exit(2);
 }
+async function installQaVideo(entry) {
+  const state = await probeQaVideo();
+  if (state.ok) { console.log('Already READY (runtime ' + qaRuntimeDir + '); nothing to install.'); return true; }
+  console.log('Not ready: ' + state.reason);
+  console.log('Installs ' + entry.install.package + ' and ' + entry.install.browser + ' (~100-200 MB, skipped if already cached) into ' + qaRuntimeDir + ' and the Playwright browser cache. No project files change; no sudo.');
+  const steps = [
+    ['npm', ['install', '--prefix', qaRuntimeDir, entry.install.package, '--no-audit', '--no-fund']],
+    [process.execPath, [join(qaRuntimeDir, 'node_modules', 'playwright', 'cli.js'), 'install', entry.install.browser]]
+  ];
+  if (dry) { for (const [cmd, argv] of steps) console.log('[dry-run] ' + show(cmd, argv)); return true; }
+  if (!(await confirm('Install QA video recording?'))) { console.log('Skipped.'); return true; }
+  mkdirSync(qaRuntimeDir, { recursive: true });
+  const pkg = join(qaRuntimeDir, 'package.json');
+  if (!existsSync(pkg)) writeFileSync(pkg, JSON.stringify({ name: 'qark-qa-video', private: true }, null, 2) + '\n');
+  for (const [cmd, argv] of steps) {
+    console.log('> ' + show(cmd, argv));
+    const result = spawnSync(cmd, argv, { stdio: 'inherit', shell: os === 'win32' && cmd === 'npm' });
+    if (result.error || result.status !== 0) {
+      console.error('Failed: ' + show(cmd, argv) + (result.error ? ' (' + result.error.message + ')' : ''));
+      return false;
+    }
+  }
+  const after = await probeQaVideo();
+  if (!after.ok) {
+    console.error('Installed but not working: ' + after.reason);
+    if (after.launchFailure && os === 'linux') console.error('Chromium may be missing system libraries. This script never uses sudo; if you approve, run: sudo npx playwright install-deps chromium');
+    return false;
+  }
+  console.log('QA video recording READY. ffmpeg (optional, for side-by-side): ' + (hasFfmpeg() ? 'found' : 'not found'));
+  return true;
+}
 let failures = 0;
 for (const id of selected) {
   const entry = manifest.integrations.find(x => x.id === id);
   console.log('\n' + entry.name + ' — ' + entry.upstream);
+  if (entry.kind === 'playwright-runtime') {
+    if (!(await installQaVideo(entry))) failures++;
+    continue;
+  }
   if (!(await confirm('Enable ' + id + '?'))) { console.log('Skipped.'); continue; }
   if (entry.kind === 'agent-skill') {
     if (!commandExists('npx') && !dry) { console.error('npx missing: install Node.js/npm first.'); failures++; continue; }
