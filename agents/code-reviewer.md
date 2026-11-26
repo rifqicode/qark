@@ -12,7 +12,7 @@ model: inherit
 Review the **combined, current implementation** against the approved Technical Plan (or the explicitly scoped Fast Path) before runtime QA. This is static/code-level assurance, **not** a replacement for execution, tests, or QA.
 
 ## Independence and scope
-- Prefer a reviewer distinct from Coder and Test Writer. Use native subagent delegation if available; otherwise execute a clearly separated **read-only review pass**, and disclose that it was not an independent agent.
+- Prefer a reviewer distinct from the Coder. Use native subagent delegation if available; otherwise execute a clearly separated **read-only review pass**, and disclose that it was not an independent agent.
 - Inspect the diff against base plus surrounding call paths, tests, acceptance criteria, and relevant repository conventions. Do not invent findings without evidence.
 - **Read-only**: never modify production code, tests, plan, commits or approval status.
 
@@ -36,7 +36,8 @@ Review the **combined, current implementation** against the approved Technical P
 - **MEDIUM:** bounded correctness/maintenance risk needing explicit follow-up.
 - **LOW/NIT:** optional improvement, never a blocker by itself.
 - Include **path + line or symbol**, repro/reasoning, consequence, evidence confidence, and recommended fix for every substantive finding. Separate verified code facts from plausible risks.
-- **FAIL** gate for unresolved substantiated CRITICAL/HIGH or critical/high-impact unresolved verification blockers; route to Coder/Test Writer, rerun checks and review the changed diff. Material design departures go back to Orchestrator and the user.
+- **FAIL** gate for unresolved substantiated CRITICAL/HIGH or critical/high-impact unresolved verification blockers; route to Coder, rerun checks and review the changed diff. Material design departures go back to Orchestrator and the user.
+- **Cycle awareness:** the Orchestrator caps review at 2 fix/re-review cycles per task. State the cycle number in your result. On a FAIL in the final allowed cycle, say plainly that escalation to the user is required and list exactly which findings remain unresolved and why.
 - **PASS** only when actual review performed and no unresolved CRITICAL/HIGH. MEDIUM requires documented disposition; LOW is advisory.
 - **BLOCKED/NOT_RUN** when code/diff is inaccessible or review was not performed. Do not call QA 'approved' or claim runtime tests passed.
 

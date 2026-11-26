@@ -54,7 +54,12 @@ Formula: **round(Σ(weight × dimension score / 4))**. Show whole-number percent
 
 **Recommendation:** [Short default, if appropriate.]
 
-**Question 1:** [One concrete question?]\n\n- **A — [Option] (Recommended):** [why + trade-off]\n- **B — [Option]:** [why + trade-off]\n- **C — [Option]:** [why + trade-off]\n- **Other:** [User-defined option, when applicable]
+**Question 1:** [One concrete question?]
+
+- **A — [Option] (Recommended):** [why + trade-off]
+- **B — [Option]:** [why + trade-off]
+- **C — [Option]:** [why + trade-off]
+- **Other:** [User-defined option, when applicable]
 
 Stop here. On the next turn, update confidence, briefly acknowledge the answer, then ask *Question 2* only if needed. Every question must have choices and a suggested best option; do not display an entire backlog of future questions.
 
