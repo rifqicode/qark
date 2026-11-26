@@ -78,6 +78,17 @@
         ]
       },
       "notes": "Optional skill. Route debugging tasks via Orchestrator/Researcher; no automatic installation."
+    },
+    {
+      "id": "qa-video",
+      "name": "QA video recording (Playwright)",
+      "kind": "playwright-runtime",
+      "upstream": "https://playwright.dev",
+      "install": {
+        "package": "playwright",
+        "browser": "chromium-headless-shell"
+      },
+      "notes": "Installs Playwright + headless Chromium into an isolated runtime dir (~/.cache/qark/qa-video, override QARK_QA_HOME). No project changes, no sudo. Used by QA for before/after UI video and recorded CLI test runs. Check readiness with --only qa-video --check."
     }
   ]
 }

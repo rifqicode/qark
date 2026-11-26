@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "description": "Qark activation and routing evals. Each case runs one prompt in a throwaway copy of evals/fixtures/shop-app. 'expect.skill_read' = the agent read/invoked the qark skill; 'expect.code_edits' = the agent edited or wrote a file outside .ai/. null means 'do not check'.",
+  "cases": [
+    {
+      "id": "explicit-review",
+      "type": "explicit",
+      "prompt": "Use qark to review how order status transitions work in this project and tell me the risks. Don't change anything.",
+      "expect": { "skill_read": true, "code_edits": false }
+    },
+    {
+      "id": "fast-label",
+      "type": "implicit",
+      "prompt": "Change the 'Submit' button label to 'Place order' in src/ui/labels.js.",
+      "expect": { "skill_read": true, "code_edits": true }
+    },
+    {
+      "id": "fast-typo",
+      "type": "implicit",
+      "prompt": "There's a typo in the README: 'recieve' should be 'receive'. Fix it.",
+      "expect": { "skill_read": true, "code_edits": true }
+    },
+    {
+      "id": "gate-status",
+      "type": "implicit",
+      "prompt": "Add a new 'refunded' order status and let customers trigger a refund from the order page.",
+      "expect": { "skill_read": true, "code_edits": false }
+    },
+    {
+      "id": "gate-auth",
+      "type": "implicit",
+      "prompt": "Change login so users can sign in with either email or phone number.",
+      "expect": { "skill_read": true, "code_edits": false }
+    },
+    {
+      "id": "bug-login",
+      "type": "implicit",
+      "prompt": "Login says 'invalid credentials' when someone types their email with capital letters. Find out why.",
+      "expect": { "skill_read": true, "code_edits": false }
+    },
+    {
+      "id": "noisy-checkout",
+      "type": "noisy",
+      "prompt": "hey so customers keep complaining the checkout total is off by a cent sometimes?? no idea why, can u take a look. thanks!",
+      "expect": { "skill_read": true, "code_edits": false }
+    },
+    {
+      "id": "neg-capital",
+      "type": "negative",
+      "prompt": "What is the capital of Australia? One word.",
+      "expect": { "skill_read": false, "code_edits": false }
+    },
+    {
+      "id": "neg-haiku",
+      "type": "negative",
+      "prompt": "Write a short haiku about autumn rain.",
+      "expect": { "skill_read": false, "code_edits": false }
+    },
+    {
+      "id": "neg-concept",
+      "type": "negative",
+      "prompt": "What's the difference between git merge and git rebase? Keep it short.",
+      "expect": { "skill_read": null, "code_edits": false }
+    },
+    {
+      "id": "neg-explain-code",
+      "type": "negative",
+      "prompt": "Explain what src/ui/labels.js does.",
+      "expect": { "skill_read": null, "code_edits": false }
+    },
+    {
+      "id": "neg-opt-out",
+      "type": "negative",
+      "prompt": "Don't use qark for this. Just rename the variable `labels` to `uiLabels` in src/ui/labels.js.",
+      "expect": { "skill_read": false, "code_edits": true }
+    }
+  ]
+}

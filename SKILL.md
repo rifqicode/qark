@@ -13,8 +13,7 @@ You are the **Orchestrator / Technical Lead** for this workflow. Consult the rol
 | --- | --- | --- |
 | Orchestrator | [agents/orchestrator.md](agents/orchestrator.md) | Always: user-facing discussion, plan ownership, delegation, status aggregation and final report |
 | Researcher | [agents/researcher.md](agents/researcher.md) | Existing-code exploration or root-cause questions requiring source evidence |
-| Coder | [agents/coder.md](agents/coder.md) | Approved scoped implementation or fixes |
-| Test Writer | [agents/test-writer.md](agents/test-writer.md) | Automated test scenarios, edge cases, regression coverage |
+| Coder | [agents/coder.md](agents/coder.md) | Approved scoped implementation or fixes, including automated tests and regression coverage; optional test-only mode for high-risk independence |
 | Code Reviewer | [agents/code-reviewer.md](agents/code-reviewer.md) | Read-only review of combined diff and tests before QA |
 | QA | [agents/qa.md](agents/qa.md) | Real behavior validation using actually available Playwright, browser, API or CLI tools |
 
@@ -30,8 +29,8 @@ For ambiguous or material-impact work, follow [Grill Me](docs/grill-me.md) at re
 4. **Targeted research:** If impact is uncertain, inspect only the relevant paths. Stop research once evidence is sufficient. If a safe display-only solution meets the request, prefer it over changing underlying business state.
 5. **Impact Gate:** When implementation materially affects business flows/rules, data integrity, security, API/schema contracts or architecture, pause affected changes, create a [Technical Implementation Plan](templates/technical-implementation-plan.md), and obtain user approval before significant implementation. Never expand scope implicitly.
 6. **Persist planned work only:** Store required plans at `<project-root>/.ai/plans/<plan-id>.md` per [Plan Storage](docs/plan-storage.md). Fast Path and read-only responses need no plan.
-7. **Execute:** Delegate plan task IDs for planned work, or a bounded instruction for Fast Path. Parallelize only with real native delegation, stable interfaces and isolated write ownership; otherwise use sequential roles.
-8. **Review before QA:** Once changes are integrated and automated checks executed, invoke [Code Reviewer](agents/code-reviewer.md) as a read-only gate for nontrivial changes. Unresolved CRITICAL/HIGH findings return to implementation and re-review. For trivial Fast Path work, proportionate self-review may suffice; disclose that no independent reviewer ran.
+7. **Execute:** Delegate plan task IDs for planned work, or a bounded instruction for Fast Path. Use the delegation driver below. Parallelize only with real delegation, stable interfaces and isolated write ownership; otherwise use sequential roles.
+8. **Review before QA:** Once changes are integrated and automated checks executed, invoke [Code Reviewer](agents/code-reviewer.md) as a read-only gate for nontrivial changes. Unresolved CRITICAL/HIGH findings return to implementation and re-review, capped at **2 review cycles per task** (a cycle = FAIL, fix, re-review); if the gate still FAILS after the second re-review, stop and escalate to the user instead of looping. For trivial Fast Path work, proportionate self-review may suffice; disclose that no independent reviewer ran.
 9. **Verify and reassess:** Run proportionate checks, never claim unrun tests, and escalate to planning if new material impact is discovered mid-task. After two failed fix/retest attempts, review root cause.
 10. **Report:** Summarize changes, actual verification, risks, blockers and decisions; include plan/task IDs only when applicable.
 
@@ -43,9 +42,15 @@ Do not trigger this skill for isolated wording or presentation-only edits, expla
 
 ## Delegation reality check
 
-A `SKILL.md` is **instruction packaging**, not a multi-agent runtime. Use native subagent tooling only when the current Codex, Antigravity, or Claude environment exposes it. If unavailable, execute scoped stages sequentially and explicitly say no independent or parallel subagents were launched. Never invent tool usage or independent QA.
+A `SKILL.md` is **instruction packaging**, not a multi-agent runtime. Pick the delegation driver for planned work in this order:
 
-## Official Herdr skill routing (optional)\n\nBefore meaningful specialist delegation, check whether the official installed `herdr` skill is available and usable in the current host. When available, **read and follow that skill** for visible separately spawned CLI agents; otherwise use normal native delegation or sequential fallback. Qark does not duplicate Herdr commands or install it automatically. See [routing rules](integrations/herdr.md). Do not claim internal subagents appear as Herdr panes.\n\n## Progress and evidence
+1. **Herdr (automatic):** if `HERDR_ENV=1` and the official `herdr` skill is readable, spawn each specialist as a separate visible CLI agent in its own pane. Read the Herdr skill for commands and follow [Herdr driver](integrations/herdr.md) for Qark's protocol (naming, self-contained handoff prompt, result files, ownership, verification). Running Qark inside Herdr is the user's standing opt-in; no per-task mention of Herdr is needed.
+2. **Native subagents:** only when the Codex, Antigravity, or Claude environment actually exposes them. These are not visible as Herdr panes.
+3. **Sequential:** execute scoped stages one after another and say no independent or parallel subagents were launched.
+
+Fast Path and trivial work never spawn panes. Never invent tool usage, pane launches or independent QA; disclose which driver was used. Qark does not install Herdr or its skill.
+
+## Progress and evidence
 
 - Work: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `SKIPPED`.
 - Verification: `NOT_RUN`, `PASS`, `FAIL`, `BLOCKED`.

@@ -4,7 +4,7 @@
 
 ## 1. Goal
 
-Coordinate six portable roles (Orchestrator, Researcher, Coder, Test Writer, Code Reviewer, QA) using **Impact-Driven Planning**: low-impact authorized tasks take Fast Path without a plan, while material changes use one approved **Technical Implementation Plan** as the source of truth. Minimize redundant documents, conflicting edits, unverified completion claims, and uncontrolled rework.
+Coordinate five portable roles (Orchestrator, Researcher, Coder, Code Reviewer, QA) using **Impact-Driven Planning**: low-impact authorized tasks take Fast Path without a plan, while material changes use one approved **Technical Implementation Plan** as the source of truth. Minimize redundant documents, conflicting edits, unverified completion claims, and uncontrolled rework.
 
 ## 2. Control plane and execution plane
 
@@ -98,7 +98,7 @@ The diagram is conceptual. Host CLI support dictates whether genuine subagents o
 - An earlier task must finish to unblock the next task.
 - Parallelism would cost more coordination than it saves.
 
-**Default ownership:** Coder owns production code; Test Writer owns test code and fixtures. Shared config, snapshots, schemas, migrations, and lockfiles are coordinated by Orchestrator. Neither role silently rewrites the other's work. In a shared working tree, never concurrently edit overlapping areas.
+**Default ownership:** A Coder owns the production code and test files/fixtures in its assigned scope. For high-risk areas the Orchestrator may add a second Coder in test-only mode that owns only test files and designs scenarios from acceptance criteria without reading the implementation. Shared config, snapshots, schemas, migrations, and lockfiles are coordinated by Orchestrator. No agent silently rewrites another's work. In a shared working tree, never concurrently edit overlapping areas.
 
 Parallel work is not considered integrated until combined changes are checked for conflicts, test results are revalidated on the combined state, and the Orchestrator records the outcome.
 
@@ -119,10 +119,10 @@ Example (illustrative only):
 
 | Task | Owner | Work | Verification | Evidence |
 | --- | --- | --- | --- | --- |
-| IMP-01 | Coder | DONE | PASS | Commit/diff + unit-test log |
-| TEST-01 | Test Writer | DONE | PASS | Test files + run output |
+| IMP-01 | Coder | DONE | PASS | Commit/diff + test files + unit-test log |
+| IMP-02 | Coder (test-only) | DONE | PASS | Independent test files + run output |
 | QA-01 | QA | DONE | FAIL | Reproduction steps + screenshot |
-| IMP-02 | Coder | BLOCKED | NOT_RUN | Waiting for approved API decision |
+| IMP-03 | Coder | BLOCKED | NOT_RUN | Waiting for approved API decision |
 
 ## 7. Integration, code review and QA gates
 
@@ -133,7 +133,7 @@ Before QA, Orchestrator confirms a testable combined state and reports:
 
 For nontrivial changes, Code Reviewer must inspect the combined diff, relevant context and tests. Record reviewed ref, severity, file/symbol evidence and PASS/FAIL/BLOCKED/NOT_RUN separately from automated test results. CRITICAL/HIGH findings block QA and route back to implementation and review; MEDIUM requires a documented disposition. A separate agent is preferred but not guaranteed by the host. Trivial Fast Path changes may use proportional self-review.
 
-QA validates against the **approved plan where one exists**, or explicitly requested Fast Path behavior, not just assertions made by Coder or Test Writer. Where supported, QA uses Playwright/browser/CLI and captures enough evidence to reproduce a defect. When the required environment or tool is unavailable, report verification BLOCKED or NOT_RUN rather than PASS.
+QA validates against the **approved plan where one exists**, or explicitly requested Fast Path behavior, not just assertions or tests written by the Coder. Where supported, QA uses Playwright/browser/CLI and captures enough evidence to reproduce a defect. UI changes require before/after video of the same scripted scenario (baseline from a separate worktree, `BASELINE_N/A` for new UI), and CLI test runs require a recorded run with raw log and exit code, both via Playwright with the scripts in [`integrations/qa-video/`](../integrations/qa-video/); other non-UI checks use text evidence. If Playwright is not set up, QA asks the user to approve `integrations/setup.mjs --only qa-video`, otherwise video is reported BLOCKED. See [QA](../agents/qa.md). When the required environment or tool is unavailable, report verification BLOCKED or NOT_RUN rather than PASS.
 
 ## 8. Finding and rework routing
 
@@ -143,13 +143,15 @@ Orchestrator triages:
 
 | Finding | Route |
 | --- | --- |
-| Production behavior defect | Coder, then regression test and QA retest |
-| Missing/incorrect automated test | Test Writer |
+| Production behavior defect | Coder (fix plus regression test), then QA retest |
+| Missing/incorrect automated test | Coder (or a test-only Coder for high-risk areas) |
 | Unknown current behavior or root cause | Researcher |
 | Environment/tool unavailable | Unblock environment or report limitation |
 | Requirement conflict or material design change | Discuss with user; update/re-approve Technical Plan |
 
 Avoid endless retry loops. **After two failed fix/retest attempts on the same finding, require a root-cause review** rather than another unexamined patch. This is a review trigger, not a hard ban on further work.
+
+**Review cycle cap:** a Code Reviewer FAIL, Coder fix and re-review is one cycle. Allow at most **2 cycles per task**. If the gate still FAILS after the second re-review, the Orchestrator stops the automatic loop, performs a root-cause review, and asks the user to decide: accept the risk with a documented disposition, change scope or design, direct a specific fix, or stop. Each cycle's findings and the `Review cycles used: N/2` count are recorded in the plan (or the final report on Fast Path).
 
 ## 9. Orchestrator final report
 
@@ -163,7 +165,13 @@ For each scoped deliverable, communicate:
 
 Do not equate all tasks DONE with production-ready. Deployment/release requires its own permission and checks where appropriate.
 
-## 10. Optional official Herdr skill routing\n\nWhen the installed official `herdr` skill is readable and usable, Orchestrator follows it for separately spawned visible CLI agents rather than maintaining an in-house pane adapter. If absent, native delegation/sequential fallback applies. Qark retains approval, file ownership and verification authority; native in-process subagents are not assumed visible. See [Herdr routing](../integrations/herdr.md).\n\n## 11. Portability rules
+## 10. Delegation drivers
+
+For planned work the Orchestrator picks, in order: **Herdr** (automatic when `HERDR_ENV=1` and the official `herdr` skill is readable), host-native subagents, then sequential role-scoped execution.
+
+With the Herdr driver each specialist is a separate CLI process in its own pane with **no shared conversation context**, so the handoff table in section 3 must be delivered as a self-contained prompt plus files, and the agent's report (same fields) is written to `.ai/runs/<plan-id>/<task-id>.md` and read back by the Orchestrator. Herdr lifecycle states are not verification; Orchestrator validates diff and evidence before recording statuses. Qark keeps approval, file ownership and verification authority; Herdr supplies only pane and process control. Full protocol: [Herdr driver](../integrations/herdr.md). Fast Path never spawns panes.
+
+## 11. Portability rules
 
 - Maintain these **logical contracts** independent of CLI vendor.
 - Use host-native subagents when offered, otherwise sequential role-scoped execution.
