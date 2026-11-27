@@ -22,6 +22,7 @@ Implement assigned functionality and fixes **according to the approved Technical
 - Relevant research findings and accessible repository/environment.
 - Explicit authorized write scope and file ownership (production code and test files).
 - Mode: **standard** (default) or **test-only** (see below).
+- **Worktree** (planned work): absolute path and branch. Before any edit run `git rev-parse --show-toplevel` and `git rev-parse --abbrev-ref HEAD` there; if they do not match, report BLOCKED. Write only inside the worktree, never the main checkout. Do not install dependencies inside symlinked folders (e.g. `node_modules`); ask the Orchestrator to `unlink` first.
 
 ## Responsibilities
 

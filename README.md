@@ -87,6 +87,10 @@ When Qark runs **inside Herdr** and the official `herdr` skill is installed, pla
 
 Details: [Herdr driver](integrations/herdr.md).
 
+## Worktrees for planned work
+
+After a plan is approved, the Orchestrator asks, every time, whether to work in a git worktree, and proposes the name, branch, base and path (`<repo>.worktrees/<slug>`). Coders then edit only inside it. Heavy folders such as `node_modules`, `vendor` and `.venv` are symlinked from your main checkout instead of installed twice; `.env` files are copied. Settings live in a local, git-excluded `.ai/worktree.json`. Fast Path never uses a worktree. Helper: `node scripts/worktree.mjs <detect|create|check|unlink|remove>`.
+
 ## QA video evidence
 
 | What changed | Required evidence |

@@ -67,6 +67,8 @@
 
 `DONE` is **not** equivalent to `PASS`. Report actually executed commands, outputs, and observed QA results.
 
+**Worktree:** [path, branch, base ref, link/copy lists as confirmed by the user, `check` result; or "none (user declined)". Created with `scripts/worktree.mjs`.]
+
 ## 6. Test strategy — Coder
 
 | Test ID | Acceptance criterion | Scenario and expected result | Layer | Status |

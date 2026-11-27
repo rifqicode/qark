@@ -29,6 +29,7 @@ Each handoff identifies:
 | Dependencies | What must be complete or available |
 | Scope boundaries | Modules/files allowed and forbidden when known |
 | Acceptance criteria | Relevant requirements in the plan |
+| Worktree | Absolute path and branch for planned work (agents verify toplevel and branch before editing); N/A on Fast Path |
 | Environment/tool access | What may actually be run |
 | Expected evidence | Code diff, test output, logs, screenshots, repro, etc. |
 

@@ -41,6 +41,10 @@ A future adapter can expose:
 
 These must be views of the same canonical document (symlinks when supported, generated copies with conflict detection otherwise), **not independent editable sources**.
 
+## Worktree config (local)
+
+Planned work may run in a git worktree created by `scripts/worktree.mjs` (default path `<repo>.worktrees/<slug>`, outside the repo). Per-project settings live in `.ai/worktree.json` (`link`, `copy`, `postCreate`). This file is **local**: the script adds it, and every linked/copied entry, to `.git/info/exclude`, so nothing appears as untracked and nothing is committed. `link` entries are symlinked from the main checkout (no second install); `copy` entries (e.g. `.env`) are copied once. `postCreate` runs shell commands from this local file only.
+
 ## Open implementation checks
 
 1. Host-specific native plan locations/permissions for installed CLI versions.

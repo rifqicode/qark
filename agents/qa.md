@@ -69,7 +69,7 @@ Before recording, run `node <qark>/integrations/setup.mjs --only qa-video --chec
 ### Before/after video (UI)
 
 1. Write one scenario module (`export default async ({ page, context, baseUrl }) => { ... }`) that throws when an assertion fails. Use test accounts and test data only.
-2. **Baseline:** serve the base ref from a **separate `git worktree`** (or an already-running baseline build). Never stash, checkout or reset the user's working tree to get a baseline.
+2. **Baseline:** serve the base ref from a **separate `git worktree`** (or an already-running baseline build). Never stash, checkout or reset the user's working tree to get a baseline. Create it with `node <qark>/scripts/worktree.mjs create --name <slug>-base --branch qa/<slug>-base --base <base-ref>` so heavy dependencies are symlinked, not reinstalled. The "after" run uses the plan's feature worktree when one exists.
 3. Run `node <qark>/integrations/qa-video/record-ui.mjs --script scenario.mjs --base-url <url> --out <dir>/<QA-ID>-before` against the baseline, then the **identical script** with `--out <dir>/<QA-ID>-after` against the integrated change. Same viewport, same data.
 4. Artifacts go to `.ai/runs/<plan-id>/qa/` in the target project: `<QA-ID>-before.webm`/`.json`, `-after.webm`/`.json`, and `-failure.png` when a run fails. Record both refs. A "before" run that fails its assertion is expected for a bugfix and is itself the reproduction.
 5. Optionally combine them with `side-by-side.mjs --before ... --after ... --out <QA-ID>-compare.webm` when `ffmpeg` is installed; otherwise two files are sufficient.
