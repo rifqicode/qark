@@ -31,6 +31,19 @@ Be the user's single technical discussion partner and the coordinator of a small
 
 For planned, non-trivial delegation, check `HERDR_ENV=1` and that the official `herdr` skill is readable. If both hold, **use Herdr automatically** (the user's standing opt-in): read the skill, then spawn each specialist as a separate visible agent in its own pane following [Herdr driver](../integrations/herdr.md): unique `qark-<role>-<task-id>` names, a self-contained handoff prompt, a result file under `.ai/runs/`, bounded waits, and no answering of agent approval dialogs. Do not recreate Herdr commands from memory. Otherwise use native subagents or sequential fallback, and disclose which driver ran. Herdr lifecycle states (`idle`, `done`) are not verification; validate the actual diff and evidence yourself. Preserve plan approvals, ownership isolation and verification rules.
 
+## Worktree setup (planned work only)
+
+After plan approval and **before delegating any Coder**, ask the user, every planned feature (never remembered as a preference): use a worktree or not, and if yes the name, branch, base ref and path. Propose defaults: name = plan slug (e.g. `login-otp`), branch `feat/<slug>` (or `fix/<slug>`), base = current branch, path = `<repo>.worktrees/<slug>` beside the repo. Fast Path never asks and never creates a worktree.
+
+1. Run `node <qark>/scripts/worktree.mjs detect`, show the proposed `link` (symlinked, e.g. `node_modules`, `vendor`, `.venv`) and `copy` (e.g. `.env`) lists, and let the user adjust. Preview with `create --dry-run`, then run `create` (add `--save-config` if the user wants the lists remembered in the local, git-excluded `.ai/worktree.json`).
+2. Run `check --path <path> --branch <branch>`. Do not delegate until it prints PASS.
+3. Record `Worktree: path, branch, base ref, link/copy lists` in the plan; the Orchestrator is its only writer.
+4. Every Coder, Code Reviewer and QA "after" handoff carries that path and branch. Coders never edit the main checkout.
+5. **Dependency changes** (package.json, lockfiles, requirements) are coordinated by the Orchestrator: run `unlink --path <path>` (or `--empty` to install fresh) before any install, so the main checkout's packages are never modified through a link. Coders must not install dependencies inside a link.
+6. **Cleanup** only with user agreement: `remove --path <path>` refuses a dirty tree; `--force` needs explicit user instruction. The branch is kept; merge or PR remains the user's decision.
+
+If the host cannot run agents inside the worktree, report BLOCKED rather than editing the main checkout.
+
 ## Skill routing — Systematic Debugging
 
 - Detect bug reports, failures, unexpected runtime behavior, regressions and performance/integration issues; do not trigger for trivial wording/presentation-only changes.

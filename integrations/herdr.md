@@ -41,7 +41,8 @@ You are the Qark <ROLE> for task <TASK-ID>.
 1. Read the role spec: <absolute path to installed agents/<role>.md>
 2. Plan: <project>/.ai/plans/<plan-id>.md, version <N>. Your tasks: <IDs>. Criteria: <AC IDs>.
    (Fast Path / no plan: scope = <one concise paragraph>.)
-3. Write scope (you may edit only these): <paths/globs>. Forbidden: <paths>.
+3. Worktree: <absolute path>, branch <branch>. Work only there; first verify `git rev-parse --show-toplevel` and the branch, else report BLOCKED. (Fast Path: omit.)
+   Write scope (you may edit only these): <paths/globs>. Forbidden: <paths>.
    Do not edit the plan file, commit, push, deploy or touch production.
 4. Mode: <standard | test-only>.
 5. Run these checks when feasible: <commands from the project, if known>.
@@ -54,7 +55,7 @@ The role spec's own result format and evidence rules still apply. The Orchestrat
 
 ## Isolation and parallelism
 
-- Separate panes are **not** filesystem isolation. All panes share one working tree unless a worktree is used.
+- Separate panes are **not** filesystem isolation; the worktree is. For planned work, split panes with the working directory set to the plan's worktree (see Orchestrator "Worktree setup"). Without a worktree, all panes share one working tree.
 - Read-only roles (Researcher, Code Reviewer, QA) may run in parallel panes against the same tree.
 - Parallel **writers** require disjoint file ownership declared in the handoff, or separate worktrees (see the Herdr skill's worktree commands). Otherwise run writers sequentially. Shared config, schemas, lockfiles and snapshots are coordinated by the Orchestrator.
 - After parallel work, the Orchestrator integrates, runs combined checks, and only then proceeds to Code Review and QA.
