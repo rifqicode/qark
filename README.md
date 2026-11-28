@@ -18,7 +18,7 @@ Pick your host. Qark then activates on ordinary development requests; you don't 
 
 | Host | Install |
 | --- | --- |
-| **Claude Code** | `git clone https://github.com/rifqicode/qark.git` then `claude --plugin-dir ./qark` |
+| **Claude Code** | `/plugin install qark --marketplace rifqicode/qark` (or `claude plugin marketplace add rifqicode/qark`, then `claude plugin install qark@qark`). Local checkout: `claude --plugin-dir ./qark` |
 | **Codex** | `npx skills add rifqicode/qark --skill qark -g -a codex -y` |
 | **Antigravity** | `agy plugin install https://github.com/rifqicode/qark` |
 

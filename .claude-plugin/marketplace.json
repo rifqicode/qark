@@ -1,0 +1,12 @@
+{
+  "name": "qark",
+  "owner": { "name": "rifqicode" },
+  "description": "Qark: impact-driven AI development workflow.",
+  "plugins": [
+    {
+      "name": "qark",
+      "source": "./",
+      "description": "Impact-driven orchestration: Fast Path, approved plans, edge-case review and QA."
+    }
+  ]
+}
