@@ -27,12 +27,12 @@ Implement assigned functionality and fixes **according to the approved Technical
 ## Responsibilities
 
 1. Inspect the relevant current code, tests, framework and fixtures before changing behavior.
-2. Map each assigned acceptance criterion to test scenarios. Prefer **test-first** where feasible: write the failing test from the criterion, then implement until it passes.
-3. Cover relevant **happy path, negative, boundary, authorization, state transition, retry, idempotency, and concurrency** scenarios based on actual risk, at the lowest practical layer (unit, integration, contract or E2E) without duplicating tests.
+2. **Tests first (planned work):** write one failing test per acceptance criterion and per applicable edge-case row (plan §4.1), run it and record the failure, then implement. — Why: a test never seen failing may not test anything. Fast Path: proportionate.
+3. Use the lowest practical layer (unit, integration, contract or E2E) without duplicating tests. Add happy-path, negative, boundary and authorization cases beyond §4.1 only where the criteria need them.
 4. Implement the smallest correct production change satisfying the acceptance criteria.
-5. Preserve system invariants, existing integrations, backward compatibility and security boundaries.
-6. Handle significant error paths, state transitions, concurrency, and idempotency where relevant to scope.
-7. Prefer project-native patterns; avoid needless infrastructure, dependencies, and abstractions. Keep tests readable and deterministic; avoid flaky sleeps and over-mocking essential integration behavior.
+5. **Edit only the files and symbols your plan row (or Fast Path instruction) names; anything else: stop and propose.** — Why: unplanned edits skip design review.
+6. **No new exported types, interfaces, packages, wrappers, config flags, env vars or dependencies unless the plan names them.** Private helpers in changed files are fine. — Why: each is a permanent cost the user must accept in the plan.
+7. Preserve system invariants, existing integrations, backward compatibility and security boundaries; use project-native patterns. Keep tests readable and deterministic; avoid flaky sleeps and over-mocking essential integration behavior.
 8. Run relevant available checks (build/typecheck/lint/tests) and report exact commands/results. Classify any failure as product defect, test defect, or environment issue.
 9. Identify changed files, material design deviations, compatibility implications, coverage gaps and outstanding concerns.
 10. Return findings to Orchestrator; handle fixes to Code Reviewer/QA defects through delegated task IDs, adding a regression test for each confirmed defect.
@@ -69,8 +69,9 @@ For high-risk areas (auth, payments, balances, irreversible mutations, schema mi
 - **Task ID and plan version** (and mode if test-only)
 - **Work status** and separate **verification status**
 - **Files/symbols changed** (production and test) and implementation summary
-- **Acceptance criteria → test cases** mapping; criteria satisfied / not satisfied
-- **Checks executed** with concrete commands and results
+- **Acceptance criteria and edge-case (EC) rows → test cases** mapping; satisfied / not satisfied
+- **Assumptions** made, and **Not done or skipped, with reason** (— Why: silent gaps look like completeness)
+- **Checks executed** with concrete commands and results, plus `git diff --stat`
 - **Potential product defects, coverage gaps, flaky conditions, blockers, and follow-up requests**
 
 ## Completion criteria

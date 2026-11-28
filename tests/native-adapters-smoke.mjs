@@ -109,7 +109,19 @@ for (const file of ['evals/run.mjs', 'evals/analyze.mjs']) {
 const dry = spawnSync(process.execPath, [resolve(root, 'evals/run.mjs')], { encoding: 'utf8' });
 assert.equal(dry.status, 0, dry.stderr);
 assert.match(dry.stdout, /Dry run: \d+ case\(s\)/);
-const { analyzeStream, scoreCase, summarize } = await import(new URL('../evals/analyze.mjs', import.meta.url));
+const { analyzeStream, scoreCase, summarize, diffTrees, edgeCasesFound, EDGE_CASES } = await import(new URL('../evals/analyze.mjs', import.meta.url));
+assert.ok(suite.cases.some(c => c.expect.diff_budget), 'need an over-engineering diff-budget eval');
+assert.ok(suite.cases.some(c => c.expect.edge_cases), 'need an edge-case list eval');
+const fixtureDir = resolve(root, 'evals/fixtures/shop-app');
+const noDiff = diffTrees(fixtureDir, fixtureDir);
+assert.equal(noDiff.filesChanged, 0);
+assert.equal(scoreCase({ diff_budget: { max_files_changed: 1 } }, { diff: { ...noDiff, filesChanged: 3, changed: ['a', 'b', 'c'], added: [], removed: [] } }).pass, false);
+assert.equal(scoreCase({ diff_budget: { max_files_changed: 1, untouched: ['package.json'] } }, { diff: { ...noDiff, filesChanged: 1, changed: ['package.json'], added: [], removed: [] } }).pass, false);
+assert.equal(scoreCase({ diff_budget: { max_lines_added: 25 } }, {}).pass, false, 'unmeasured diff must fail');
+assert.equal(edgeCasesFound('x').length, 0);
+assert.equal(edgeCasesFound('duplicate, out-of-order, retry, idempotent, partial failure, rollback, timeout, concurrent, rounding, empty').length, Object.keys(EDGE_CASES).length);
+assert.equal(scoreCase({ edge_cases: true }, { edgeCasesCovered: ['duplicates'] }).pass, false);
+
 const line = event => JSON.stringify(event);
 const tool = (name, input) => line({ type: 'assistant', message: { content: [{ type: 'tool_use', name, input }] } });
 const viaSkill = analyzeStream([tool('Skill', { skill: 'qark:qark' }), tool('Edit', { file_path: '/p/src/a.js' }),
@@ -119,6 +131,8 @@ assert.equal(viaSkill.codeEdits, true);
 assert.equal(viaSkill.costUsd, 0.1);
 const viaRead = analyzeStream(tool('Read', { file_path: '/home/u/.agents/skills/qark/SKILL.md' }));
 assert.equal(viaRead.skillRead, true);
+const planStream = analyzeStream(tool('Write', { file_path: '/p/.ai/plans/P.md', content: 'EC duplicates retries idempotency timeouts' }));
+assert.ok(planStream.edgeCasesCovered.includes('timeouts'), 'edge cases are read from plan writes');
 const planOnly = analyzeStream(tool('Write', { file_path: '/p/.ai/plans/PLAN-1.md' }));
 assert.equal(planOnly.codeEdits, false, 'writes under .ai/ are plans, not code edits');
 assert.equal(analyzeStream(tool('Read', { file_path: '/p/src/other.js' })).skillRead, false);
@@ -135,6 +149,29 @@ const metrics = summarize([
 ]);
 assert.equal(metrics.triggerAccuracy, 1);
 assert.equal(metrics.falsePositiveRate, 1);
+
+// Over-engineering and edge-case rules
+const skillMd = read('SKILL.md');
+assert.match(skillMd, /When unsure, use the Impact Gate/);
+assert.match(skillMd, /re-route to step 5/);
+for (const trigger of ['Money', 'Ledger', 'Schema/migrations', 'Vendor integrations', 'Message producers/consumers', 'Auth']) {
+  assert.ok(skillMd.includes(trigger), `Impact Gate trigger missing: ${trigger}`);
+}
+const template = read('templates/technical-implementation-plan.md');
+for (const heading of ['Non-goals', 'Simplest option considered', 'Edge cases & failure modes']) assert.ok(template.includes(heading), `template missing ${heading}`);
+for (let i = 1; i <= 10; i++) assert.ok(template.includes('EC-' + String(i).padStart(2, '0')), `template missing EC-${i}`);
+const coderMd = read('agents/coder.md');
+assert.match(coderMd, /Tests first/);
+assert.match(coderMd, /No new exported types/);
+assert.match(coderMd, /Not done or skipped/);
+const reviewerMd = read('agents/code-reviewer.md');
+assert.match(reviewerMd, /Plan compliance/);
+assert.match(reviewerMd, /Simplicity/);
+assert.match(reviewerMd, /unplanned complexity/i);
+assert.match(reviewerMd, /Checked and found fine/);
+assert.ok(existsSync(resolve(root, 'docs/backend-qa.md')));
+assert.match(read('agents/qa.md'), /Backend QA\]\(\.\.\/docs\/backend-qa\.md\)/);
+assert.match(read('docs/backend-qa.md'), /Replay tests/);
 
 assert.equal(hooks.hooks.SessionStart[0].matcher, 'startup|clear|compact');
 const hookPath = resolve(root, 'hooks/session-start.mjs');

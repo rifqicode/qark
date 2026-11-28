@@ -15,7 +15,7 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { analyzeStream, scoreCase, summarize } from './analyze.mjs';
+import { analyzeStream, diffTrees, scoreCase, summarize } from './analyze.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -71,6 +71,7 @@ for (const c of cases) {
     const timedOut = proc.error?.code === 'ETIMEDOUT';
     writeFileSync(join(transcriptDir, c.id + '-' + attempt + '.jsonl'), proc.stdout ?? '');
     const observed = analyzeStream(proc.stdout ?? '');
+    observed.diff = diffTrees(join(here, 'fixtures', 'shop-app'), work); // measured before the temp copy is deleted
     const score = scoreCase(c.expect, observed);
     const run = { attempt, pass: score.pass && !(proc.error && !timedOut), failures: score.failures, timedOut, error: proc.error && !timedOut ? proc.error.message : null, seconds: Math.round((Date.now() - started) / 1000), observed };
     row.runs.push(run);
@@ -88,6 +89,8 @@ const failedCases = rows.filter(row => row.runs.some(run => !run.pass));
 console.log('\nTrigger accuracy      ' + pct(summary.triggerAccuracy) + ' (' + summary.triggerHits + '/' + summary.triggerTotal + ')  qark read when expected');
 console.log('False-positive rate   ' + pct(summary.falsePositiveRate) + ' (' + summary.falsePositives + '/' + summary.negativeTotal + ')  qark read when it should stay out');
 console.log('Edit behavior         ' + pct(summary.editBehaviorAccuracy) + ' (' + summary.editHits + '/' + summary.editTotal + ')  edited / did not edit as expected');
+if (summary.budgetTotal) console.log('Diff budget           ' + pct(summary.diffBudgetAccuracy) + ' (' + summary.budgetHits + '/' + summary.budgetTotal + ')  stayed within file/line budget');
+if (summary.edgeTotal) console.log('Edge-case list        ' + pct(summary.edgeCaseAccuracy) + ' (' + summary.edgeHits + '/' + summary.edgeTotal + ')  all 10 categories appeared');
 console.log('Cases failed          ' + failedCases.length + '/' + rows.length);
 
 const outFile = join(here, 'results', stamp + '.json');

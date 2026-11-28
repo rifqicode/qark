@@ -50,13 +50,13 @@ Verify **actual application behavior** against the approved Technical Implementa
 
 ## Evidence by change type
 
-Video is **mandatory** where the change has a UI or a CLI test run, recorded with Playwright through the scripts in the installed qark skill's `integrations/qa-video/` (referred to below as `<qark>`):
+Video is **mandatory** only for UI changes and for changes to a CLI that is itself the product, recorded with Playwright through the scripts in the installed qark skill's `integrations/qa-video/` (referred to below as `<qark>`). Backend work uses integration and replay tests, not video. — Why: running `go test`/`npm test` is routine for backend changes, and a video of it adds nothing a log and exit code do not.
 
 | Change / check | Required evidence |
 | --- | --- |
 | **UI** (rendered behavior or a user flow) or a UI bugfix | **Before/after video** of the same scripted scenario (`record-ui.mjs`), plus the scenario's assertions |
-| **CLI test runs** (the test suite, build/typecheck or CLI scenario QA executes for this change) | **Video of the run** (`record-cli.mjs`) plus the raw `.log` and exit code. For a bugfix, also record the failing run on the baseline when a baseline can run |
-| API, backend, data or config with no UI and no CLI run to record | Text evidence: exact request/command, response/output, relevant logs. No video |
+| **CLI product** (the change alters a CLI's behavior; QA runs that CLI scenario) | **Video of the run** (`record-cli.mjs`) plus the raw `.log` and exit code. For a bugfix, also record the failing run on the baseline when a baseline can run |
+| **Backend** (API, consumer, ledger, migration, vendor integration, data or config) | **Integration and replay tests** per [Backend QA](../docs/backend-qa.md): exact command, exit code, log excerpt and invariant query output. No video |
 
 ### Preflight and setup
 

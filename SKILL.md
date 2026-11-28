@@ -24,10 +24,20 @@ For ambiguous or material-impact work, follow [Grill Me](docs/grill-me.md) at re
 ## Workflow — Impact-Driven Planning
 
 1. **Identify intent:** Distinguish discussion, research, planning, implementation and verification. Do not treat discussion or planning as permission to edit.
-2. **Quick impact assessment:** Check business flows/rules, data integrity, security/permissions, API or schema contracts, architecture, integrations and irreversible/production actions. File count alone does not determine impact.
-3. **Fast Path:** For explicitly requested, well-understood, isolated, reversible low-impact changes (e.g. wording, typo or presentation-only UI), inspect relevant source, implement directly without a separate plan or redundant approval, and run proportional checks.
-4. **Targeted research:** If impact is uncertain, inspect only the relevant paths. Stop research once evidence is sufficient. If a safe display-only solution meets the request, prefer it over changing underlying business state.
-5. **Impact Gate:** When implementation materially affects business flows/rules, data integrity, security, API/schema contracts or architecture, pause affected changes, create a [Technical Implementation Plan](templates/technical-implementation-plan.md), and obtain user approval before significant implementation. Never expand scope implicitly.
+2. **Quick impact assessment:** Check the Impact Gate triggers in step 5 against the request. Size never decides: a one-line rounding change is gated; a 40-file label rename is not. — Why: risk lives in what is touched, not in diff size.
+3. **Fast Path:** Only if the change is explicitly requested, touches only wording/typos, comments/docs, presentation-only UI or tests with no production change, **and** no step 5 trigger applies. Inspect source, implement directly without a plan, run proportional checks. **If it turns out to touch a trigger, stop before editing that area, list what is already changed, and re-route to step 5; do not revert without asking.** — Why: Fast Path consent covered only the stated change.
+4. **Targeted research:** If impact is uncertain, inspect only the relevant paths and stop once evidence is sufficient. Prefer a display-only solution over changing business state when it meets the request.
+5. **Impact Gate:** Plan and get user approval before implementing any change that touches:
+   - **Money:** amounts, fees, tax, FX, rounding, any arithmetic on money.
+   - **Ledger/balances:** postings, reversals, balance reads used for decisions.
+   - **Schema/migrations:** DDL, backfills, type/nullability changes, indexes on large tables.
+   - **Vendor integrations:** payment/bank/KYC calls, webhooks, timeout or retry settings.
+   - **Message producers/consumers:** topics, event schemas, handlers, ack/offset, retry/DLQ.
+   - **Auth:** authn/authz, sessions/tokens, permissions, secrets.
+   - **Contracts/state:** API or event shapes, status enums, state machines, transactions/locking, jobs.
+   - **New dependency, service or shared abstraction.**
+
+   **When unsure, use the Impact Gate.** — Why: an unneeded plan costs minutes; a missed one costs an incident. Until approval, a triggered area allows only read-only research and writing the [Technical Implementation Plan](templates/technical-implementation-plan.md). — Why: "significant implementation" left room for partial edits. Never expand scope implicitly.
 6. **Persist planned work only:** Store required plans at `<project-root>/.ai/plans/<plan-id>.md` per [Plan Storage](docs/plan-storage.md). Fast Path and read-only responses need no plan.
 7. **Execute:** Delegate plan task IDs for planned work, or a bounded instruction for Fast Path. Use the delegation driver below. Parallelize only with real delegation, stable interfaces and isolated write ownership; otherwise use sequential roles.
 8. **Review before QA:** Once changes are integrated and automated checks executed, invoke [Code Reviewer](agents/code-reviewer.md) as a read-only gate for nontrivial changes. Unresolved CRITICAL/HIGH findings return to implementation and re-review, capped at **2 review cycles per task** (a cycle = FAIL, fix, re-review); if the gate still FAILS after the second re-review, stop and escalate to the user instead of looping. For trivial Fast Path work, proportionate self-review may suffice; disclose that no independent reviewer ran.
@@ -38,7 +48,7 @@ For ambiguous or material-impact work, follow [Grill Me](docs/grill-me.md) at re
 
 For bug investigations, failed tests/builds, unexpected behavior, performance regressions or integration failures, check whether the installed `systematic-debugging` skill from `obra/superpowers` is accessible in the current host. If available, load its instructions before diagnosing and follow its root-cause-first method; delegate read-only investigation to Researcher as appropriate. If unavailable, use the built-in evidence-first Researcher process and disclose the fallback. **Never auto-install** external skills and never claim they were loaded without actually reading them.
 
-Do not trigger this skill for isolated wording or presentation-only edits, explanations with no debugging, or ordinary feature work. Root-cause investigation does not authorize code edits: apply Fast Path versus Impact Gate after findings, keeping approval and verification rules intact.
+Do not trigger systematic-debugging for isolated wording or presentation-only edits, explanations with no debugging, or ordinary feature work. Root-cause investigation does not authorize code edits: apply Fast Path versus Impact Gate after findings, keeping approval and verification rules intact.
 
 ## Delegation reality check
 
