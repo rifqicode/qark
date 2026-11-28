@@ -15,7 +15,7 @@ node ~/.agents/skills/qark/integrations/setup.mjs --only rtk --agent all --yes
 node ~/.agents/skills/qark/integrations/setup.mjs --skip caveman
 ```
 
-Relative skill paths can vary across hosts; point Node at the actual installed `integrations/setup.mjs`.
+Relative skill paths can vary across hosts; point Node at the actual installed `integrations/setup.mjs`. Or run `/qark-int-setup` (`/qark:qark-int-setup` as a plugin): a manual-only skill where the agent reads this folder, previews each install and asks before running it.
 
 - **Caveman:** installs **only the skill** via `npx skills add JuliusBrussee/caveman -g -y`, not its proxy or model routing. To remove: `npx skills remove JuliusBrussee/caveman -g`. Source: https://github.com/JuliusBrussee/caveman
 - **Systematic Debugging:** installs only the `systematic-debugging` skill from `obra/superpowers` using `npx skills add obra/superpowers --skill systematic-debugging -g -y`. Orchestrator and Researcher load it when a bug, failure or unexpected behavior needs investigation, if the host exposes the installed skill. If unavailable, they use built-in research instead. Does not auto-install or bypass Impact Gate. Source: https://github.com/obra/superpowers/tree/main/skills/systematic-debugging

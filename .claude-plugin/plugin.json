@@ -1,6 +1,6 @@
 {
   "name": "qark",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Impact-driven orchestration with optional debugging skill routing",
   "author": {
     "name": "rifqicode"

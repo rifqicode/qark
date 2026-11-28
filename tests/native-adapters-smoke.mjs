@@ -173,6 +173,19 @@ assert.ok(existsSync(resolve(root, 'docs/backend-qa.md')));
 assert.match(read('agents/qa.md'), /Backend QA\]\(\.\.\/docs\/backend-qa\.md\)/);
 assert.match(read('docs/backend-qa.md'), /Replay tests/);
 
+// Manual-only integration setup skill and matching plugin versions
+const intSetup = read('skills/qark-int-setup/SKILL.md');
+assert.match(intSetup, /^---\nname: qark-int-setup\n/);
+assert.match(intSetup, /\ndisable-model-invocation: true\n/, 'setup skill must be manual-only');
+assert.match(intSetup, /integrations\/manifest\.json/);
+assert.match(intSetup, /--dry-run/);
+assert.match(intSetup, /--check/);
+assert.match(intSetup, /Never use sudo/);
+assert.match(intSetup, /user agrees/);
+assert.match(read('agents/qa.md'), /cannot produce video evidence/);
+assert.match(read('agents/qa.md'), /\/qark-int-setup/);
+assert.equal(new Set([claude.version, codex.version, anti.version]).size, 1, 'plugin manifests must share one version');
+
 assert.equal(hooks.hooks.SessionStart[0].matcher, 'startup|clear|compact');
 const hookPath = resolve(root, 'hooks/session-start.mjs');
 const syntax = spawnSync(process.execPath, ['--check', hookPath], { encoding: 'utf8' });

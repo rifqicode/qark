@@ -64,6 +64,7 @@ Before recording, run `node <qark>/integrations/setup.mjs --only qa-video --chec
 
 - **Ready:** proceed.
 - **Not ready:** do not install silently. Ask the user to approve `node <qark>/integrations/setup.mjs --only qa-video --yes` (installs Playwright and headless Chromium into `~/.cache/qark/qa-video` and the Playwright browser cache; changes nothing in the project; never uses sudo), then run it. Adding `--dry-run` previews the commands.
+- **Without this setup QA cannot produce video evidence.** The user can also run `/qark-int-setup` (`/qark:qark-int-setup` when Qark is loaded as a plugin).
 - **Declined or failed:** record the video evidence as **BLOCKED** with the reason. The verdict may still rest on assertions, logs and exit codes that were actually executed, but the missing video is reported as an evidence gap. If the UI cannot be exercised at all, QA verification is BLOCKED/NOT_RUN as usual.
 
 ### Before/after video (UI)
