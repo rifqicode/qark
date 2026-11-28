@@ -96,8 +96,8 @@ After a plan is approved, the Orchestrator asks, every time, whether to work in 
 | What changed | Required evidence |
 | --- | --- |
 | **UI** | Before/after video of the *same* scripted scenario (baseline run from a separate `git worktree`; `BASELINE_N/A` for brand-new UI) |
-| **CLI test runs** | Video of the run, plus the raw log and exit code |
-| **API / backend with nothing to record** | Text evidence: request or command, output, logs |
+| **CLI product** (the change alters a CLI's behavior) | Video of the run, plus the raw log and exit code |
+| **Backend** (API, consumer, ledger, migration, vendor) | Integration and replay tests: command, exit code, log excerpt, invariant query output. No video ([guide](docs/backend-qa.md)) |
 
 Video supports the verdict; it never replaces it. PASS/FAIL still comes from assertions and exit codes. The CLI video is a live rendering of the real command's output, not a real-terminal capture, so the log and exit code remain the authoritative evidence.
 
@@ -108,7 +108,7 @@ node integrations/setup.mjs --only qa-video --check     # ready? (changes nothin
 node integrations/setup.mjs --only qa-video --yes       # install
 ```
 
-QA runs the check itself and **asks before installing**. If you decline, video is reported as BLOCKED, never faked. Details: [QA role](agents/qa.md) and [integration setup](integrations/README.md).
+QA runs the check itself and **asks before installing**. Without this setup QA cannot produce video evidence; if you decline, video is reported as BLOCKED, never faked. Details: [QA role](agents/qa.md) and [integration setup](integrations/README.md).
 
 ## Optional integrations
 
@@ -128,11 +128,14 @@ node ~/.agents/skills/qark/integrations/setup.mjs --only systematic-debugging
 
 The path varies by host; point Node at wherever `integrations/setup.mjs` is installed.
 
+Or let your agent do it: run **`/qark-int-setup`** (`/qark:qark-int-setup` when Qark is loaded as a plugin). It checks what is installed, asks which integrations you want, previews each install and asks before running it. It is manual-only (`disable-model-invocation`), so the agent never starts it on its own.
+
 ## Repository layout
 
 ```text
 SKILL.md                  canonical workflow (single source of truth)
 skills/qark/SKILL.md      native plugin entrypoint (thin router)
+skills/qark-int-setup/    manual /qark-int-setup skill for optional integrations
 agents/                   five role specs
 docs/                     grill-me, handoff, plan storage, install, auto-activation
 templates/                Technical Plan template, global bootstrap

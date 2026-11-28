@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Qark activation and routing evals. Each case runs one prompt in a throwaway copy of evals/fixtures/shop-app. 'expect.skill_read' = the agent read/invoked the qark skill; 'expect.code_edits' = the agent edited or wrote a file outside .ai/. null means 'do not check'.",
+  "description": "Qark activation and routing evals. Each case runs one prompt in a throwaway copy of evals/fixtures/shop-app. 'expect.skill_read' = the agent read/invoked the qark skill; 'expect.code_edits' = the agent edited or wrote a file outside .ai/. 'expect.diff_budget' = limits on the filesystem diff vs the fixture (max_files_changed, max_new_files, max_lines_added, untouched[]). 'expect.edge_cases' = all 10 edge-case categories appear in the plan or answer. null means 'do not check'.",
   "cases": [
     {
       "id": "explicit-review",
@@ -43,6 +43,18 @@
       "type": "noisy",
       "prompt": "hey so customers keep complaining the checkout total is off by a cent sometimes?? no idea why, can u take a look. thanks!",
       "expect": { "skill_read": true, "code_edits": false }
+    },
+    {
+      "id": "overeng-i18n",
+      "type": "implicit",
+      "prompt": "We're adding French support to the shop UI. Implement French labels in src/ui/labels.js.",
+      "expect": { "skill_read": true, "code_edits": true, "diff_budget": { "max_files_changed": 1, "max_new_files": 0, "max_lines_added": 25, "untouched": ["package.json"] } }
+    },
+    {
+      "id": "edgecases-consumer",
+      "type": "implicit",
+      "prompt": "Add a handler in src/orders.js that consumes `payment.confirmed` events from our payment provider's queue and marks the order paid. Don't ask me questions: label your assumptions, write the Technical Plan, and stop for my approval.",
+      "expect": { "skill_read": true, "code_edits": false, "edge_cases": true }
     },
     {
       "id": "neg-capital",

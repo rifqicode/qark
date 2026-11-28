@@ -2,9 +2,9 @@
 
 > Template v1.0 · Status: DRAFT · Plan ID: PLAN-YYYYMMDD-001 · Version: 0.1 · Owner: Orchestrator
 
-**Location convention:** Store each live plan in the **target project's** `.ai/plans/<plan-id>.md`, not in the installed `qark` skills repository. Codex, Gemini and Claude adapters must resolve the *same canonical plan*. Where a CLI requires its own plan directory, create a link or generated read-only mirror, never a second editable source. Avoid absolute device-specific paths. See [Plan Storage](../docs/plan-storage.md).
+**Location:** the **target project's** `.ai/plans/<plan-id>.md`, never this skills repository. See [Plan Storage](../docs/plan-storage.md).
 
-**Adaptive:** Keep the sections relevant to the scope; expand when system risk requires it. Do not invent file paths, tests, or verification results.
+**Adaptive:** Trim sections for small scope, but never remove §4.1 (edge cases). Do not invent file paths, tests, or verification results.
 
 ## 1. Overview
 
@@ -14,7 +14,7 @@
 
 **Scope:** [In scope]
 
-**Out of scope:** [Explicit exclusions]
+**Non-goals:** [What a reasonable engineer might add but we will not: generic framework, flag, retry library, extra endpoint. — Why: the Coder and Reviewer check the diff against this list.]
 
 **Constraints:** [Security, backward compatibility, cost, deadline]
 
@@ -36,7 +36,7 @@
 
 **Contracts affected:** [API, schema, states, event formats or N/A]
 
-**Trade-offs:** [Meaningful alternative and why rejected]
+**Simplest option considered:** [The smallest change that could meet the acceptance criteria. If not chosen, name the criterion it fails. Any new abstraction, dependency or file must be listed here. — Why: complexity must justify itself against the minimum.]
 
 | Decision | Status | Rationale |
 | --- | --- | --- |
@@ -48,6 +48,23 @@
 | --- | --- | --- |
 | AC-01 | Given [precondition], when [action], then [observable outcome] | MUST |
 | AC-02 | Given [failure/boundary], when [action], then [safe outcome] | MUST |
+
+### 4.1 Edge cases & failure modes
+
+> Every row is answered: `Y` with expected behavior and a test, or `N/A` with a reason. A blank row is a plan defect. — Why: a skipped case becomes visible instead of silent. Detail: [backend-qa](../docs/backend-qa.md).
+
+| ID | Case | Applies | Expected behavior | Test |
+| --- | --- | --- | --- | --- |
+| EC-01 | nil / empty / missing input | Y / N/A: reason | [ ] | T-xx |
+| EC-02 | duplicates (same request or event twice) | | | |
+| EC-03 | out-of-order messages | | | |
+| EC-04 | retries (caller, consumer, vendor) | | | |
+| EC-05 | idempotency (key, dedupe, replay) | | | |
+| EC-06 | partial failure (step N of M fails) | | | |
+| EC-07 | rollback / compensation | | | |
+| EC-08 | timeouts (slow or no response) | | | |
+| EC-09 | concurrency (parallel writers, locking) | | | |
+| EC-10 | rounding / precision / currency | | | |
 
 ## 5. Execution & progress
 
@@ -101,7 +118,7 @@
 | Q-01 | AC-01 | [End-to-end scenario] | NOT_RUN | — |
 | Q-02 | AC-02 | [Failure/negative scenario] | NOT_RUN | — |
 
-**UI scenarios** require before/after video (`.ai/runs/<plan-id>/qa/<QA-ID>-before.webm` / `-after.webm`, base ref and tested ref, or `BASELINE_N/A` for new UI). **CLI test runs** require a recorded run (`<QA-ID>-after.webm` + `.log` + exit code). API/backend checks with neither use text evidence. Recording uses `integrations/qa-video/` (run `integrations/setup.mjs --only qa-video --check`; setup needs user approval). Video supports the verdict; it does not replace assertions or exit codes.
+**Evidence by change type** (UI video, CLI-product video, backend integration/replay text evidence) is defined in [QA](../agents/qa.md#evidence-by-change-type) and [backend-qa](../docs/backend-qa.md). Video never replaces assertions or exit codes.
 
 If runtime/tool access is missing, record BLOCKED/NOT_RUN. Do not claim PASS from static review.
 

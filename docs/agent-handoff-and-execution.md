@@ -76,9 +76,7 @@ flowchart TD
     X --> U
 ```
 
-**Fast Path:** An explicit implementation request, known isolated low-impact change, reversible outcome, and no material effects on business rules/flow, data integrity, security/permissions, API/schema contracts or architecture. An existing complex codebase alone is not reason to create a plan.
-
-**Impact Gate:** If research or execution reveals material impact, pause the affected change and create a Technical Plan with user approval before continuing. Favor a display-only label change over modifying an internal status enum when it meets the user's intent. Do not silently expand scope. Production deployment, destructive actions and irreversible operations always retain their separate authorization requirements.
+**Fast Path and Impact Gate:** The triggers live only in [SKILL.md](../SKILL.md) steps 3 and 5. When unsure, gate. If Fast Path execution reveals a trigger, stop before editing that area and re-route to a Technical Plan with user approval; do not silently expand scope. Production deployment, destructive actions and irreversible operations always retain their separate authorization requirements.
 
 The diagram is conceptual. Host CLI support dictates whether genuine subagents or isolated environments are available.
 
@@ -134,7 +132,7 @@ Before QA, Orchestrator confirms a testable combined state and reports:
 
 For nontrivial changes, Code Reviewer must inspect the combined diff, relevant context and tests. Record reviewed ref, severity, file/symbol evidence and PASS/FAIL/BLOCKED/NOT_RUN separately from automated test results. CRITICAL/HIGH findings block QA and route back to implementation and review; MEDIUM requires a documented disposition. A separate agent is preferred but not guaranteed by the host. Trivial Fast Path changes may use proportional self-review.
 
-QA validates against the **approved plan where one exists**, or explicitly requested Fast Path behavior, not just assertions or tests written by the Coder. Where supported, QA uses Playwright/browser/CLI and captures enough evidence to reproduce a defect. UI changes require before/after video of the same scripted scenario (baseline from a separate worktree, `BASELINE_N/A` for new UI), and CLI test runs require a recorded run with raw log and exit code, both via Playwright with the scripts in [`integrations/qa-video/`](../integrations/qa-video/); other non-UI checks use text evidence. If Playwright is not set up, QA asks the user to approve `integrations/setup.mjs --only qa-video`, otherwise video is reported BLOCKED. See [QA](../agents/qa.md). When the required environment or tool is unavailable, report verification BLOCKED or NOT_RUN rather than PASS.
+QA validates against the **approved plan where one exists**, or explicitly requested Fast Path behavior, not just assertions or tests written by the Coder. Where supported, QA captures enough evidence to reproduce a defect. Evidence by change type (UI video, CLI-product video, backend integration/replay tests) is defined once in [QA](../agents/qa.md) and [Backend QA](backend-qa.md). When the required environment or tool is unavailable, report verification BLOCKED or NOT_RUN rather than PASS.
 
 ## 8. Finding and rework routing
 

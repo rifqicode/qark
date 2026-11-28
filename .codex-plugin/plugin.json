@@ -1,6 +1,6 @@
 {
   "name": "qark",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Impact-aware AI development workflow with role delegation and optional debugging skills.",
   "author": {
     "name": "rifqicode"

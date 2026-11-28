@@ -6,7 +6,7 @@ Each case in [cases.json](cases.json) runs one prompt headlessly in a throwaway 
 
 ```bash
 node evals/run.mjs                                   # list cases, no model calls
-node evals/run.mjs --run                             # run everything (12 model calls, roughly $2-3, ~15 min)
+node evals/run.mjs --run                             # run everything (14 model calls, roughly $2-3, ~15 min)
 node evals/run.mjs --run --case fast-label,neg-capital --repeat 3
 node evals/run.mjs --run --type negative
 ```
@@ -20,6 +20,8 @@ node evals/run.mjs --run --type negative
 | **Trigger accuracy** | Cases that should use Qark: share where the agent invoked the `qark` skill or read its `SKILL.md` |
 | **False-positive rate** | Negative controls (`skill_read: false`): share where Qark was used anyway |
 | **Edit behavior** | `code_edits` expectations: Fast Path cases must edit, Impact Gate and investigation cases must **not** edit code before approval. Writes under `.ai/` (plans) do not count as code edits |
+| **Diff budget** | `diff_budget` (`overeng-i18n`): the temp copy is diffed against the fixture; too many files, new files or added lines, or a touched `package.json`, fails. Catches an unneeded i18n layer or dependency, and also over-gating (no edit at all fails `code_edits`) |
+| **Edge-case list** | `edge_cases` (`edgecases-consumer`): all 10 categories of plan section 4.1 must appear in the plan or answer. This checks the list is present, not that its content is correct, so read the transcript too |
 
 Case types follow common skill-eval practice: `explicit` (names Qark), `implicit` (describes the need), `noisy` (messy real-world phrasing), `negative` (must stay out, or must not edit). An expectation of `null` means "not checked".
 
